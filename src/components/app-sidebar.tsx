@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { GalleryVerticalEnd, User } from "lucide-react"
+import { FileChartColumn, GalleryVerticalEnd, User } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -18,10 +18,9 @@ const data = {
 
    navMain: [
       {
-         title: "Users",
-         url: "/users",
-         icon: User,
-         isActive: true,
+         title: "Projects",
+         url: "/projects",
+         icon: FileChartColumn,
          // items: [
          //    {
          //       title: "History",
@@ -37,6 +36,11 @@ const data = {
          //    },
          // ],
       },
+      {
+         title: "Users",
+         url: "/users",
+         icon: User,
+      }
       // {
       //    title: "Models",
       //    url: "#",
