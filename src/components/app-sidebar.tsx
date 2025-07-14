@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { FileChartColumn, GalleryVerticalEnd, User } from "lucide-react"
+import { FileChartColumn, GalleryVerticalEnd, SquareCheck, User } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -21,20 +21,11 @@ const data = {
          title: "Projects",
          url: "/projects",
          icon: FileChartColumn,
-         // items: [
-         //    {
-         //       title: "History",
-         //       url: "#",
-         //    },
-         //    {
-         //       title: "Starred",
-         //       url: "#",
-         //    },
-         //    {
-         //       title: "Settings",
-         //       url: "#",
-         //    },
-         // ],
+      },
+      {
+         title: "Tasks",
+         url: "/tasks",
+         icon: SquareCheck,
       },
       {
          title: "Users",
