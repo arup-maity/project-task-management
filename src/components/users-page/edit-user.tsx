@@ -7,10 +7,12 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { useMutation } from "@tanstack/react-query";
+import { axiosInstance } from "@/lib/axios";
 
 const schemaValidation = z.object({
-   firstName: z.string(),
-   lastName: z.string(),
+   firstname: z.string(),
+   lastname: z.string(),
    email: z.string().email(),
    password: z.string().min(6),
 });
@@ -18,14 +20,27 @@ const schemaValidation = z.object({
 type Inputs = z.infer<typeof schemaValidation>;
 
 const EditUser = ({ open, close, employeeId }: { open: boolean; close: () => void; employeeId?: number | null }) => {
-   const defaultValues = { firstName: "", lastName: "", email: "", password: "" };
+   const defaultValues = { firstname: "", lastname: "", email: "", password: "" };
 
    const { register, handleSubmit, reset, formState: { errors }, } = useForm<Inputs>({
       defaultValues,
       mode: "onChange",
       resolver: zodResolver(schemaValidation)
    })
-   const onSubmit: SubmitHandler<Inputs> = (data) => console.log(data)
+   const createMutation = useMutation({
+      mutationKey: ['create-user'],
+      mutationFn: (data: Inputs) => axiosInstance.post('/user/create-user', data).then(res => res.data),
+      onSuccess: () => {
+         close();
+         reset();
+      },
+      onError: (error) => {
+         console.log(error)
+      }
+   })
+   const onSubmit: SubmitHandler<Inputs> = (data) => {
+      createMutation.mutate(data)
+   }
    return (
       <>
          <Sheet open={open} onOpenChange={() => { close(); reset() }}>
@@ -42,15 +57,15 @@ const EditUser = ({ open, close, employeeId }: { open: boolean; close: () => voi
 
                         <div className="flex flex-wrap -m-2">
                            <fieldset className="w-6/12 p-2">
-                              <label className="block text-sm font-medium text-gray-900 mb-1.5">FirstName</label>
-                              <Input {...register('firstName')} />
-                              {errors.firstName && <span>{errors.firstName.message}</span>}
+                              <label className="block text-sm font-medium text-gray-900 mb-1.5">firstname</label>
+                              <Input {...register('firstname')} />
+                              {errors.firstname && <span>{errors.firstname.message}</span>}
                            </fieldset>
 
                            <fieldset className="w-6/12 p-2">
-                              <label className="block text-sm font-medium text-gray-900 mb-1.5">LastName</label>
-                              <Input {...register('lastName')} />
-                              {errors.lastName && <span>{errors.lastName.message}</span>}
+                              <label className="block text-sm font-medium text-gray-900 mb-1.5">lastname</label>
+                              <Input {...register('lastname')} />
+                              {errors.lastname && <span>{errors.lastname.message}</span>}
                            </fieldset>
 
                            <fieldset className="w-full p-2">
