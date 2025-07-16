@@ -39,32 +39,24 @@ const UserListPage = () => {
                         <tr>
                            <th className='w-80 text-left p-2 border'>Name</th>
                            <th className='w-auto text-left p-2 border'>Email</th>
-                           <th className='w-60 text-left p-2 border'>Options</th>
                         </tr>
                      </thead>
                      <tbody>
                         {
                            isLoading ?
                               <tr>
-                                 <td colSpan={3} className='text-center p-2 border'>Loading...</td>
+                                 <td colSpan={2} className='text-center p-2 border'>Loading...</td>
                               </tr>
                               :
                               data?.length === 0 ?
                                  <tr>
-                                    <td colSpan={3} className='text-center p-2 border'>No users found</td>
+                                    <td colSpan={2} className='text-center p-2 border'>No users found</td>
                                  </tr>
                                  :
                                  data.map((user: User) => (
                                     <tr key={user.id}>
                                        <td className='p-2 border'>{user.firstname} {user.lastname}</td>
                                        <td className='p-2 border'>{user.email}</td>
-                                       <td className='p-2 border'>
-                                          <Button
-                                             onClick={() => setOpenEditUser(prev => !prev)}
-                                          >
-                                             Edit
-                                          </Button>
-                                       </td>
                                     </tr>
                                  ))
                         }

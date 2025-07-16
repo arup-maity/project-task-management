@@ -7,19 +7,23 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { axiosInstance } from "@/lib/axios";
+import { Loader2 } from "lucide-react";
 
 const schemaValidation = z.object({
-   firstname: z.string(),
+   firstname: z.string().min(1, { message: "This field has to be filled." }),
    lastname: z.string(),
-   email: z.string().email(),
-   password: z.string().min(6),
+   email: z.string().min(1, { message: "This field has to be filled." }).email("This is not a valid email."),
+   password: z.string().min(1, { message: "This field has to be filled." }).regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}$/, {
+      message: "Your password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number.",
+   })
 });
 
 type Inputs = z.infer<typeof schemaValidation>;
 
 const EditUser = ({ open, close, employeeId }: { open: boolean; close: () => void; employeeId?: number | null }) => {
+   const queryClient = useQueryClient()
    const defaultValues = { firstname: "", lastname: "", email: "", password: "" };
 
    const { register, handleSubmit, reset, formState: { errors }, } = useForm<Inputs>({
@@ -31,6 +35,9 @@ const EditUser = ({ open, close, employeeId }: { open: boolean; close: () => voi
       mutationKey: ['create-user'],
       mutationFn: (data: Inputs) => axiosInstance.post('/user/create-user', data).then(res => res.data),
       onSuccess: () => {
+         queryClient.invalidateQueries({
+            queryKey: ['users']
+         })
          close();
          reset();
       },
@@ -59,35 +66,41 @@ const EditUser = ({ open, close, employeeId }: { open: boolean; close: () => voi
                            <fieldset className="w-6/12 p-2">
                               <label className="block text-sm font-medium text-gray-900 mb-1.5">firstname</label>
                               <Input {...register('firstname')} />
-                              {errors.firstname && <span>{errors.firstname.message}</span>}
+                              {errors.firstname && <p className="text-red-500 test-sm">{errors.firstname.message}</p>}
                            </fieldset>
 
                            <fieldset className="w-6/12 p-2">
                               <label className="block text-sm font-medium text-gray-900 mb-1.5">lastname</label>
                               <Input {...register('lastname')} />
-                              {errors.lastname && <span>{errors.lastname.message}</span>}
                            </fieldset>
 
                            <fieldset className="w-full p-2">
                               <label className="block text-sm font-medium text-gray-900 mb-1.5">Email</label>
                               <Input {...register('email')} className="w-6/12" />
-                              {errors.email && <span>{errors.email.message}</span>}
+                              {errors.email && <p className="text-red-500 test-sm">{errors.email.message}</p>}
                            </fieldset>
 
                            <fieldset className="w-full p-2">
                               <label className="block text-sm font-medium text-gray-900 mb-1.5">Password</label>
                               <Input {...register('password')} className="w-6/12" />
-                              {errors.password && <span>{errors.password.message}</span>}
+                              {errors.password && <p className="text-red-500 test-sm">{errors.password.message}</p>}
                            </fieldset>
                         </div>
                      </div>
                   </div>
                   <div className="flex gap-2 p-4">
-                     <Button type='submit' className='w-32'
+                     <Button
+                        type='submit'
+                        className='w-32'
+                        disabled={createMutation.isPending}
                      >
+                        {createMutation.isPending && <Loader2 className="mr-2 animate-spin" />}
                         Save
                      </Button>
-                     <Button variant='secondary' className='w-32'
+                     <Button
+                        variant='secondary'
+                        className='w-32'
+                        disabled={createMutation.isPending}
                         onClick={() => { close(); reset() }}
                      >
                         Cancel

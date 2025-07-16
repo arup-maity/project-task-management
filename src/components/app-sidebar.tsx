@@ -7,15 +7,15 @@ import { FileChartColumn, GalleryVerticalEnd, SquareCheck, User } from "lucide-r
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/ui/sidebar"
+import { AuthContext } from "@/context/auth-context"
+import { useMutation } from "@tanstack/react-query"
+import { axiosInstance } from "@/lib/axios"
+import { toast } from "sonner"
+import { handleApiError } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 
 // This is sample data.
 const data = {
-   user: {
-      name: "shadcn",
-      email: "m@example.com",
-      avatar: "/avatars/shadcn.jpg",
-   },
-
    navMain: [
       {
          title: "Projects",
@@ -32,75 +32,25 @@ const data = {
          url: "/users",
          icon: User,
       }
-      // {
-      //    title: "Models",
-      //    url: "#",
-      //    icon: Bot,
-      //    items: [
-      //       {
-      //          title: "Genesis",
-      //          url: "#",
-      //       },
-      //       {
-      //          title: "Explorer",
-      //          url: "#",
-      //       },
-      //       {
-      //          title: "Quantum",
-      //          url: "#",
-      //       },
-      //    ],
-      // },
-      // {
-      //    title: "Documentation",
-      //    url: "#",
-      //    icon: BookOpen,
-      //    items: [
-      //       {
-      //          title: "Introduction",
-      //          url: "#",
-      //       },
-      //       {
-      //          title: "Get Started",
-      //          url: "#",
-      //       },
-      //       {
-      //          title: "Tutorials",
-      //          url: "#",
-      //       },
-      //       {
-      //          title: "Changelog",
-      //          url: "#",
-      //       },
-      //    ],
-      // },
-      // {
-      //    title: "Settings",
-      //    url: "#",
-      //    icon: Settings2,
-      //    items: [
-      //       {
-      //          title: "General",
-      //          url: "#",
-      //       },
-      //       {
-      //          title: "Team",
-      //          url: "#",
-      //       },
-      //       {
-      //          title: "Billing",
-      //          url: "#",
-      //       },
-      //       {
-      //          title: "Limits",
-      //          url: "#",
-      //       },
-      //    ],
-      // },
    ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+   const session = React.useContext(AuthContext)
+   const router = useRouter();
+   const logutMutation = useMutation({
+      mutationKey: ['logout'],
+      mutationFn: () => axiosInstance.get('/auth/logout').then(res => res.data),
+      onSuccess: () => {
+         toast.success("Logout successful")
+         session?.updateValue({ login: false, user: { name: "", email: "" } })
+         router.push('/login')
+      },
+      onError: (error) => {
+         handleApiError(error)
+      }
+   })
+
    return (
       <Sidebar collapsible="icon" {...props}>
          <SidebarHeader>
@@ -118,7 +68,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <NavMain items={data.navMain} />
          </SidebarContent>
          <SidebarFooter>
-            <NavUser user={data.user} />
+            <NavUser user={session?.user || { name: "", email: "" }} logout={() => logutMutation.mutate()} />
          </SidebarFooter>
          <SidebarRail />
       </Sidebar>

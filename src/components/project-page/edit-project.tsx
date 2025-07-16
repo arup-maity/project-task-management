@@ -4,14 +4,14 @@ import TextareaAutosize from 'react-textarea-autosize';
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 
 import { axiosInstance } from "@/lib/axios";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-// import { MultiSelect } from "../common/multiple-select";
+import { Loader2 } from "lucide-react";
 
 const schemaValidation = z.object({
    title: z.string(),
@@ -20,8 +20,10 @@ const schemaValidation = z.object({
 });
 
 type Inputs = z.infer<typeof schemaValidation>;
+type bodyType = Inputs & { userID: string }
 
-const EditProject = ({ open, close, projectID }: { open: boolean; close: () => void; projectID?: string }) => {
+const EditProject = ({ open, close, projectID, userId }: { open: boolean; close: () => void; projectID?: string, userId: string }) => {
+   const queryClient = useQueryClient()
    const defaultValues = { title: "", description: "", status: "active" };
 
    const { register, control, handleSubmit, reset, setValue, formState: { errors }, } = useForm<Inputs>({
@@ -31,8 +33,11 @@ const EditProject = ({ open, close, projectID }: { open: boolean; close: () => v
    })
    const createMutation = useMutation({
       mutationKey: ['create-project'],
-      mutationFn: (data: Inputs) => axiosInstance.post('/projects/create-project', data).then(res => res.data),
+      mutationFn: (data: bodyType) => axiosInstance.post('/projects/create-project', data).then(res => res.data),
       onSuccess: () => {
+         queryClient.invalidateQueries({
+            queryKey: ['projects']
+         })
          close();
          reset();
       },
@@ -42,8 +47,11 @@ const EditProject = ({ open, close, projectID }: { open: boolean; close: () => v
    })
    const updateMutation = useMutation({
       mutationKey: ['create-project'],
-      mutationFn: (data: Inputs) => axiosInstance.put(`/projects/update-project/${projectID}`, data).then(res => res.data),
+      mutationFn: (data: bodyType) => axiosInstance.put(`/projects/update-project/${projectID}`, data).then(res => res.data),
       onSuccess: () => {
+         queryClient.invalidateQueries({
+            queryKey: ['projects']
+         })
          close();
          reset();
       },
@@ -61,7 +69,7 @@ const EditProject = ({ open, close, projectID }: { open: boolean; close: () => v
       }),
       enabled: !!projectID,
    })
-   const onSubmit: SubmitHandler<Inputs> = (data) => projectID ? updateMutation.mutate(data) : createMutation.mutate(data)
+   const onSubmit: SubmitHandler<Inputs> = (data) => projectID ? updateMutation.mutate({ ...data, userID: userId }) : createMutation.mutate({ ...data, userID: userId })
    return (
       <>
          <Sheet open={open} onOpenChange={() => { close(); reset() }}>
@@ -117,21 +125,19 @@ const EditProject = ({ open, close, projectID }: { open: boolean; close: () => v
                                     />
                                     {errors.description && <span>{errors.description.message}</span>}
                                  </fieldset>
-                                 {/* <fieldset className="w-full p-2">
-                              <label className="block text-sm font-medium text-gray-900 mb-1.5">Select User</label>
-                              <MultiSelect />
-                              {errors.lastName && <span>{errors.lastName.message}</span>}
-                           </fieldset> */}
                               </div>
                            </div>
                         </div>
                         <div className="flex gap-2 p-4">
                            <Button type='submit' className='w-32'
+                              disabled={createMutation.isPending || updateMutation.isPending}
                            >
+                              {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                               {projectID ? 'Update' : 'Add'}
                            </Button>
                            <Button variant='secondary' className='w-32'
                               onClick={() => { close(); reset() }}
+                              disabled={createMutation.isPending || updateMutation.isPending}
                            >
                               Cancel
                            </Button>
